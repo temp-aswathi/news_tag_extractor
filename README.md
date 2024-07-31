@@ -20,8 +20,8 @@ In the visualisation, when we hover over each point, we will be able to see the 
 
 Clone the repository:
 ```sh
-git clone https://github.com/your-repo/NewsTagExtractor.git
-cd NewsTagExtractor
+git clone https://github.com/temp-aswathi/news_tag_extractor.git
+cd news_tag_extractor
 ```
 Install the required packages:
 ```sh
