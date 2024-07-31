@@ -33,9 +33,6 @@ class TagExtractor:
         tokens = [token.text.lower() for token in doc if not token.is_punct and (token.text.lower() not in custom_stop_words)]
         return ' '.join(tokens)
 
-    def calculate_similarity(self, word1: str, word2: str) -> float:
-        return nlp(word1).similarity(nlp(word2))
-
     def find_matching_strings(self, list1: list, list2: list, threshold: float = 0.95, max_matches: int = 100) -> list:
         list1 = [str1.lower().strip() for str1 in list1]
         list2 = [str2.lower().strip() for str2 in list2]
@@ -60,12 +57,6 @@ class TagExtractor:
 
     def calculate_readability(self, text: str) -> float:
         return textstat.flesch_reading_ease(text)
-
-    def get_pos_and_entities(self, text: str):
-        doc = nlp(text)
-        pos_tags = [f"{token.text} ({token.pos_})" for token in doc]
-        entities = [f"{ent.text} ({ent.label_})" for ent in doc.ents]
-        return pos_tags, entities
 
     def filter_tags(self, tags: list) -> list:
         filtered_tags = []
