@@ -20,6 +20,12 @@ nlp.Defaults.stop_words.update(["said", "says", "say", "upto", "come"])
 
 class TagExtractor:
     def __init__(self, sheet_id: str):
+        """
+        Initialize the TagExtractor with data from a Google Sheets CSV.
+
+        Args:
+            sheet_id (str): Google Sheets ID to fetch the CSV data.
+        """
         url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv'
         self.all_tag_df = pd.read_csv(url)
         self.all_tag_df['Tag'] = self.all_tag_df['Tag'].str.lower()
@@ -27,13 +33,34 @@ class TagExtractor:
         self.num_of_article = self.all_tag_df['#Articles'].to_list()
         self.tag_article_count = dict(zip(self.all_tag_df['Tag'], self.num_of_article))
 
-    def preprocess_text(self, text) -> str:
+    def preprocess_text(self, text: str) -> str:
+        """
+        Preprocess the input text by removing punctuation and stopwords.
+
+        Args:
+            text (str): The text to preprocess.
+
+        Returns:
+            str: Preprocessed text.
+        """
         custom_stop_words = set(nlp.Defaults.stop_words) - {'and'}
         doc = nlp(text)
         tokens = [token.text.lower() for token in doc if not token.is_punct and (token.text.lower() not in custom_stop_words)]
         return ' '.join(tokens)
 
     def find_matching_strings(self, list1: list, list2: list, threshold: float = 0.95, max_matches: int = 100) -> list:
+        """
+        Find close matches from list1 in list2 using a similarity threshold.
+
+        Args:
+            list1 (list): List of strings to search from.
+            list2 (list): List of strings to search within.
+            threshold (float): Similarity threshold for matching.
+            max_matches (int): Maximum number of matches to return.
+
+        Returns:
+            list: List of matched strings from list2.
+        """
         list1 = [str1.lower().strip() for str1 in list1]
         list2 = [str2.lower().strip() for str2 in list2]
         matching_strings = []
@@ -43,22 +70,60 @@ class TagExtractor:
         return [match[0] for match in matching_strings]
 
     def extract_tags(self, text: str, vocab: list = None, ngrams: tuple = (1, 4)) -> list:
+        """
+        Extract top tags from the input text using TF-IDF vectorization.
+
+        Args:
+            text (str): The text to extract tags from.
+            vocab (list, optional): List of vocabulary to consider.
+            ngrams (tuple): Range of n-grams to include.
+
+        Returns:
+            list: List of top tags.
+        """
         cleaned_text = self.preprocess_text(text)
         vectorizer = TfidfVectorizer(vocabulary=vocab, ngram_range=ngrams, max_features=100)
         tfidf_matrix = vectorizer.fit_transform([cleaned_text])
         feature_names = vectorizer.get_feature_names_out()
         tfidf_scores = tfidf_matrix.toarray()[0]
-        top_tags = [feature_names[idx] for idx in tfidf_scores.argsort()[::-1]]  
+        top_tags = [feature_names[idx] for idx in tfidf_scores.argsort()[::-1]]
         return top_tags
 
     def calculate_sentiment(self, text: str) -> float:
+        """
+        Calculate sentiment polarity of the input text.
+
+        Args:
+            text (str): The text to analyze.
+
+        Returns:
+            float: Sentiment polarity score.
+        """
         analysis = TextBlob(text)
         return analysis.sentiment.polarity
 
     def calculate_readability(self, text: str) -> float:
+        """
+        Calculate readability score of the input text.
+
+        Args:
+            text (str): The text to analyze.
+
+        Returns:
+            float: Readability score.
+        """
         return textstat.flesch_reading_ease(text)
 
     def filter_tags(self, tags: list) -> list:
+        """
+        Filter tags based on POS tags and entity types.
+
+        Args:
+            tags (list): List of tags to filter.
+
+        Returns:
+            list: Filtered list of tags.
+        """
         filtered_tags = []
         for tag in tags:
             tag = tag.strip()
@@ -73,10 +138,17 @@ class TagExtractor:
                    any(ent in {'DATE'} for ent in entities):
                     continue
                 
-            filtered_tags.append(tag)       
+            filtered_tags.append(tag)
         return filtered_tags
-        
+
     def visualize_embeddings(self, tags: list, title: str) -> None:
+        """
+        Visualize the embeddings of tags and title using t-SNE.
+
+        Args:
+            tags (list): List of tags.
+            title (str): Title to visualize.
+        """
         title_vector = nlp(title).vector
         tag_vectors = [nlp(tag).vector for tag in tags]
         all_vectors = np.array([title_vector] + tag_vectors)
@@ -115,6 +187,18 @@ class TagExtractor:
         st.plotly_chart(fig)
 
     def process_input(self, title: str, url: str, category: str, content: str) -> pd.DataFrame:
+        """
+        Process the input data and generate a DataFrame with tags and additional information.
+
+        Args:
+            title (str): Title of the content.
+            url (str): URL of the content.
+            category (str): Category of the content.
+            content (str): Content text.
+
+        Returns:
+            pd.DataFrame: DataFrame with processed data.
+        """
         data = defaultdict(list)
         try:
             title = html.unescape(title)
@@ -161,7 +245,7 @@ class TagExtractor:
             data['WordCount'].append(word_count)
             data['Sentiment'].append(sentiment)
             data['Readability'].append(readability)
-            data['TopKeywords'].append(tags_list)  # Updated to reflect the correct variable
+            data['TopKeywords'].append(tags_list)
             data['ExtractedTags'].append(joined_tag)
             data['FilteredTags'].append(filtered_tags)
             data['TagArticleCounts'].append(tag_counts)
@@ -171,6 +255,9 @@ class TagExtractor:
 
 # Streamlit UI
 def main():
+    """
+    Main function to run the Streamlit app.
+    """
     st.set_page_config(page_title="Tag Extractor", page_icon=":label:", layout="wide")
     st.title("📝 Tag Extractor")
 
