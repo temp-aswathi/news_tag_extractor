@@ -16,6 +16,19 @@ In the visualisation, when we hover over each point, we will be able to see the 
 
 [Output.pdf](https://github.com/user-attachments/files/16436311/Output.pdf)
 
+## Dependencies
+- Streamlit
+- Pandas
+- Spacy
+- Scikit-learn (Tfidfvectoriser)
+- TextBlob
+- Textstat
+- Difflib
+- HTML
+- re
+- Numpy
+- Plotly
+
 ## Installation
 
 Clone the repository:
